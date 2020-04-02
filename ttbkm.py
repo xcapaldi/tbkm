@@ -10,6 +10,7 @@
 #
 
 import random as r
+import time
 
 term_colors = {'black':'30','red':'31','green':'32','yellow':'33','blue':'34','magenta':'35','cyan':'36','white':'37'}
 
@@ -37,7 +38,7 @@ def braid_move(prev_state, k_right, k_above, quiet, color):
         # decide above/below
         above = r.random() <= k_above
     # it's at right boundary
-    elif end == len(prev_state - 1):
+    elif end == len(prev_state) - 1:
         # can only go left
         right = False
         # decide above/below
@@ -72,7 +73,7 @@ def braid_move(prev_state, k_right, k_above, quiet, color):
     if right:
         step[end+2] = '┃'
     else:
-        set[end-2] = '┃'
+        step[end-2] = '┃'
 
     # check if output should not be displayed
     if not quiet:
@@ -85,10 +86,22 @@ def braid_move(prev_state, k_right, k_above, quiet, color):
             c_step = c_step.replace('┃', '\033['+term_colors[color]+'m┃'+'\033[0m')
             print(c_cross)
             print(c_step)
-            print('\n')
         else:
             print("Not a valid color!\nUse one of: black, red, green, yellow, blue, magenta, cyan or white")
     return (''.join(cross), ''.join(step))
 
+def t_moves(t, init_state, k_right, k_above, quiet, color, sleep):
+    """Take designated number of braid moves from initial state."""
 
+    prev_state = init_state
+    for i in range(t):
+        prev_state = braid_move(prev_state, k_right, k_above, quiet, color)[1]
+        # if you want to animate it
+        if sleep:
+            time.sleep(0.05)
+    return
+
+
+
+        
 
