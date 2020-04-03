@@ -8,7 +8,6 @@
 # versus our own
 #
 #
-
 import random as r
 import time
 
@@ -26,7 +25,7 @@ term_colors = {'black':'30','red':'31','green':'32','yellow':'33','blue':'34','m
 
 def braid_move(prev_state, k_right, k_above, quiet, color):
     """Make an individual braid move.""" 
-
+    
     # find the mobile end of the string
     end = prev_state.index('┃')
 
@@ -93,6 +92,9 @@ def braid_move(prev_state, k_right, k_above, quiet, color):
 def t_moves(t, init_state, k_right, k_above, quiet, color, sleep, path):
     """Take designated number of braid moves from initial state."""
 
+    # empty list to store output
+    out_list = []
+
     # if you want to save the data, path should hold name the output file
     if path:
         with open(path, 'w') as f:
@@ -103,17 +105,23 @@ def t_moves(t, init_state, k_right, k_above, quiet, color, sleep, path):
                 cross, prev_state = braid_move(prev_state, k_right, k_above, quiet, color)
                 f.write(cross + '\n')
                 f.write(prev_state + '\n')
+                # write to list
+                out_list.append(cross)
+                out.list.append(prev_state)
                 # if you want to animate it, sleep is in seconds
                 if sleep:
                     time.sleep(sleep)
     else:
         prev_state = init_state
         for i in range(t):
-            prev_state = braid_move(prev_state, k_right, k_above, quiet, color)[1]
+            cross, prev_state = braid_move(prev_state, k_right, k_above, quiet, color)
+            # write to list
+            out_list.append(cross)
+            out_list.append(prev_state)
             # if you want to animate it, sleep is in seconds
             if sleep:
                 time.sleep(sleep)
-    return
+    return tuple(out_list)
 
 def generate_blank(loops):
     """Generate a row with only the loops and spaces."""
@@ -203,3 +211,117 @@ def generate_twist(loops):
     row_1, row_2, row_3 = generate_peppino(loops)
     
     return (row_1, row_2, row_3,''.join(row_4),''.join(row_5),''.join(row_6),''.join(row_7))
+
+def draw_knot(state):
+    """Draw a schematic of the initial configuration before tumbling."""
+    
+    # create an empty list to store the whole knot
+    knot_rows = []
+    
+    # if ┃ isn't present in the first layer of the init state, we can assume there are multiple rows
+    if '┃' not in state:
+        # add the rows we know are present already
+        for row in state:
+            knot_rows.append(list(row))
+    # otherwise, just need the standard raymer row
+    else:
+        knot_rows.append(list(state))
+
+    # record number of loops for later use
+    loops = knot_rows[0].count('│')
+
+    # extend rows appropriately
+    # each need double the elements - assume the outer 'end' will terminate at the same level as these rows
+    for row in knot_rows:
+        row.extend(['│',' ']*(loops+1))
+
+    # now we need to start adding the loops
+    # first on top
+    for i in range(loops + 1):
+        # duplicate first row
+        # NOTE: using .insert here but it is ineffecient but usable because the lists are short
+        #       if this needed to be extended to very long lists, use a deque object
+        knot_rows.insert(0,knot_rows[0].copy())
+        # find the active point we need to draw from
+        try:
+            point = knot_rows[0].index('┌')
+        # otherwise, this must be the first row so we need the thick active end
+        except:
+            point = knot_rows[0].index('┃')
+        # if dealing with the first row
+        if knot_rows[0][point] == '┃':
+            knot_rows[0][point] = '┌'
+            knot_rows[0][point+1] = '┐'
+        else:
+            end_point = knot_rows[0].index('┐')
+            # get to the next loop
+            if knot_rows[0][point-1] == ' ':
+                point -= 2
+            else:
+                point -= 1
+            knot_rows[0][point] = '┌'
+            # we don't need to check on right-hand side
+            end_point += 2
+            knot_rows[0][end_point] = '┐'
+            # now add all the horizontal markers
+            for p, char in enumerate(knot_rows[0]):
+                if (p > point) and (p < end_point):
+                    knot_rows[0][p] = '─'
+    # add loops to bottom
+    for i in range(loops + 1):
+        # variable to store if final row
+        fin = False
+        # duplicate the bottom row
+        knot_rows.append(knot_rows[-1].copy())
+        # find active point to draw from
+        try:
+            point = knot_rows[-1].index('└')
+        # otherwise, we start from the center
+        except:
+            point = (loops * 2) - 1
+        # if we already have a curve
+        if knot_rows[-1][point] == '└':
+            # check that it is not the last loop
+            if point == 1:
+                # we just do the final active end
+                point = knot_rows[-1].index('┃')
+                fin = True
+            else:
+                point -= 2
+            end_point = knot_rows[-1].index('┘') + 2
+        # otherwise we need the first end point
+        else:
+            end_point = point + 2
+        # we have the start and end points now
+        knot_rows[-1][point] = '└'
+        knot_rows[-1][end_point] = '┘'
+        for p, char in enumerate(knot_rows[-1]):
+            if char != '┃':
+                if (p > point) and (p < end_point):
+                    knot_rows[-1][p] = '─'
+                if fin:
+                    if p < point:
+                        knot_rows[-1][p] = ' '
+            
+    # finally we need to get the output
+    for row in knot_rows:
+        print(''.join(row))
+    print('\n')
+    return knot_rows
+    #end = 
+
+
+# ─ ┌ └ ┐ ┘
+
+# ┆
+g = generate_peppino(5)
+#for line in g:
+#    print(line)
+#time.sleep(3)
+t = t_moves(20, g[-1], 0.5, 0.5, False, 'red',0.1,False)
+#for row in g+t:
+#    print(''.join(row))
+print('\n\n\n')
+time.sleep(1)
+
+draw_knot(g+t)
