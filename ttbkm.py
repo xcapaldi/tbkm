@@ -115,7 +115,91 @@ def t_moves(t, init_state, k_right, k_above, quiet, color, sleep, path):
                 time.sleep(sleep)
     return
 
+def generate_blank(loops):
+    """Generate a row with only the loops and spaces."""
+    
+    # create an empty list with enough room for the mobile end, loops, and spaces
+    spaces = (loops * 2) + 1
+
+    row = [0] * spaces
+    # start filling elements of initialization
+    for i in range(spaces):
+        # even lines have spaces
+        if (i % 2) == 0:
+            row[i] = ' '
+        # odd lines have loops
+        else:
+            row[i] = '│'
+    return row
+
+def generate_raymer(loops):
+    """Generate initial configuration to start braid moves based on Raymer's paper."""
+    
+    init = generate_blank(loops)
+    # the inner line holds the mobile end
+    init[-1] = '┃'
+
+    return ''.join(init)
 
 
-        
+def generate_peppino(loops):
+    """Generate initial configuration to start braid moves based on our configuration."""
 
+    spaces = (loops * 2) + 1
+
+    # row 1
+    row_1 = generate_blank(loops)
+    # the inner line holds the mobile end
+    row_1[-1] = '┃'
+
+    # row 2
+    # the string crosses to the outside
+    row_2 = ['━'] * spaces
+    # draw the initial curve
+    row_2[-1] = '┛'
+    # now the mobile end is at the outside
+    row_2[0] = '┏'
+    
+    # row 3
+    # copy the first row
+    row_3 = row_1.copy()
+    # switch the first and last elements
+    row_3[0] = '┃'
+    row_3[-1] = ' '
+    
+    return (''.join(row_1), ''.join(row_2), ''.join(row_3))
+
+def generate_twist(loops):
+    """Generate initial configuration based on our model with a twist."""
+    
+    # we can use the peppino generator for the first part of this configuration
+    # we just add the additional lines
+    
+    spaces = (loops * 2) + 1
+
+    # row 4
+    row_4 = generate_blank(loops)
+    # add first crossing
+    row_4[0] = '┗'
+    row_4[1] = '━'
+    row_4[2] = '┓'
+
+    # row 5
+    row_5 = generate_blank(loops)
+    row_5[0] = ' '
+    row_5[1] = '│'
+    row_5[2] = '┃'
+
+    # row 6
+    row_6 = generate_blank(loops)
+    row_6[0] = '┏'
+    row_6[1] = '│'
+    row_6[2] = '┛'
+
+    # row 7
+    row_7 = generate_blank(loops)
+    row_7[0] = '┃'
+
+    row_1, row_2, row_3 = generate_peppino(loops)
+    
+    return (row_1, row_2, row_3,''.join(row_4),''.join(row_5),''.join(row_6),''.join(row_7))
