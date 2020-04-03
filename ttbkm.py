@@ -310,18 +310,108 @@ def draw_knot(state):
     return knot_rows
     #end = 
 
+#def file_to_coords(path):
+#    """Convert text file to list of coordinates representing knot."""
+#    # we will always move the active end downwards but we can move left or right.
+#    # first active end should always be vertical
+#    try:
+#        with open(path, 'r') as f:
+#            # list to store coordinates
+#            coords = []
+#            # follow the active end
+#            for y, line in enumerate(f):
+#                # y = 0 is top
+#                # first find end
+#                if coords == []:
+#                    for x, char in enumerate(line):
+#                        # x = 0 is left
+#                        # check if we have the first active end
+#                        # it should always be vertical
+#                        if char == '┃':
+#                            # all vertical lines fall at z=0
+#                            coords.append([x, y, 0])
+#                else:
+#                    coords.append(
+
+# find start
+# go down
+# if left, go left, if right go right
+# find start
+# append first
+
+def knot_to_coords(knot):
+    """Convert knot string to list of coordinates representing knot."""
+    # work our way down moving left or right
+    # first active end will always be vertical
+    coords = []
+    for y, line in enumerate(knot.split('\n')):
+        # y=0 is the top
+        row = []
+        # this is only relevant coordinate in vertical lines
+        if '┃' in line:
+            coords.append([line.index('┃'), y, 0])
+        # check for signs of mobile end
+        elif '┓' in line or '┏' in line or '┛' in line or '┗' in line:
+            # define left and right bounds
+            try:
+                left_bound = line.index('┏')
+                invert = True
+            except:
+                left_bound = line.index('┗')
+                invert = False
+            try:
+                right_bound = line.index('┓')
+            except:
+                right_bound = line.index('┛')
+            # now iterate through characters and add coordinates
+            for x, char in enumerate(line):
+                if x >= left_bound and x <= right_bound:
+                    if char in '┓┏┛┗':
+                        row.append([x,y,0])
+                    # the string goes over
+                    elif char == '━':
+                        row.append([x,y,1])
+                    # the string goes under
+                    elif char == '│':
+                        row.append([x,y,-1])
+                    else:
+                        pass
+            # invert row if necessary
+            if invert:
+                coords.extend(row.reverse())
+            else:
+                coords.extend(row)
+        else:
+            pass
+    return coords
+
+
 
 # ─ ┌ └ ┐ ┘
 
 # ┆
-g = generate_peppino(5)
-#for line in g:
-#    print(line)
-#time.sleep(3)
-t = t_moves(20, g[-1], 0.5, 0.5, False, 'red',0.1,False)
-#for row in g+t:
-#    print(''.join(row))
-print('\n\n\n')
-time.sleep(1)
+#g = generate_peppino(2)
+#t = t_moves(3, g[-1], 0.5, 0.5, False, 'red',0.1,False)
+#print('\n\n\n')
+#time.sleep(1)
+#
+#draw_knot(g+t)
 
-draw_knot(g+t)
+knot = ''' ┌───────┐ 
+ │ ┌───┐ │ 
+ │ │┌┐ │ │ 
+ │ │┃│ │ │ 
+┏━━━┛│ │ │ 
+┃│ │ │ │ │ 
+┗━┓│ │ │ │ 
+ │┃│ │ │ │ 
+┏│┛│ │ │ │ 
+┃│ │ │ │ │ 
+┗│┓│ │ │ │ 
+ │┃│ │ │ │ 
+ │┃└─┘ │ │ 
+ └┃────┘ │ 
+  └──────┘ '''
+
+#print(knot)
+#knot_to_coords(knot)
