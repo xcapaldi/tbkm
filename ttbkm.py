@@ -90,15 +90,29 @@ def braid_move(prev_state, k_right, k_above, quiet, color):
             print("Not a valid color!\nUse one of: black, red, green, yellow, blue, magenta, cyan or white")
     return (''.join(cross), ''.join(step))
 
-def t_moves(t, init_state, k_right, k_above, quiet, color, sleep):
+def t_moves(t, init_state, k_right, k_above, quiet, color, sleep, path):
     """Take designated number of braid moves from initial state."""
 
-    prev_state = init_state
-    for i in range(t):
-        prev_state = braid_move(prev_state, k_right, k_above, quiet, color)[1]
-        # if you want to animate it
-        if sleep:
-            time.sleep(0.05)
+    # if you want to save the data, path should hold name the output file
+    if path:
+        with open(path, 'w') as f:
+            f.write(init_state + '\n')
+            prev_state = init_state
+
+            for i in range(t):
+                cross, prev_state = braid_move(prev_state, k_right, k_above, quiet, color)
+                f.write(cross + '\n')
+                f.write(prev_state + '\n')
+                # if you want to animate it, sleep is in seconds
+                if sleep:
+                    time.sleep(sleep)
+    else:
+        prev_state = init_state
+        for i in range(t):
+            prev_state = braid_move(prev_state, k_right, k_above, quiet, color)[1]
+            # if you want to animate it, sleep is in seconds
+            if sleep:
+                time.sleep(sleep)
     return
 
 
