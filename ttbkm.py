@@ -378,7 +378,8 @@ def knot_to_coords(knot):
                         pass
             # invert row if necessary
             if invert:
-                coords.extend(row.reverse())
+                row.reverse()
+                coords.extend(row)
             else:
                 coords.extend(row)
         else:
@@ -390,11 +391,10 @@ def knot_to_coords(knot):
 # ─ ┌ └ ┐ ┘
 
 # ┆
-#g = generate_peppino(2)
-#t = t_moves(3, g[-1], 0.5, 0.5, False, 'red',0.1,False)
+#g = generate_peppino(5)
+#t = t_moves(10, g[-1], 0.5, 0.5, False, 'red',0.1,False)
 #print('\n\n\n')
 #time.sleep(1)
-#
 #draw_knot(g+t)
 
 knot = ''' ┌───────┐ 
@@ -413,5 +413,8 @@ knot = ''' ┌───────┐
  └┃────┘ │ 
   └──────┘ '''
 
-#print(knot)
-#knot_to_coords(knot)
+print(knot)
+print(knot_to_coords(knot))
+
+
+
