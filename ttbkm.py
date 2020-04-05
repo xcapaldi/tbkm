@@ -349,7 +349,13 @@ def knot_to_coords(knot):
         row = []
         # this is only relevant coordinate in vertical lines
         if '┃' in line:
-            coords.append([line.index('┃'), y, 0])
+            pos = line.index('┃')
+            check = line[pos-1:pos+1]
+            # check if its the final tail at the bottom of knot
+            if '─' in check or '└' in check or '┘' in check: 
+                coords.append([pos, y, 1])
+            else:
+                coords.append([pos, y, 0])
         # check for signs of mobile end
         elif '┓' in line or '┏' in line or '┛' in line or '┗' in line:
             # define left and right bounds
@@ -391,11 +397,11 @@ def knot_to_coords(knot):
 # ─ ┌ └ ┐ ┘
 
 # ┆
-#g = generate_peppino(5)
-#t = t_moves(10, g[-1], 0.5, 0.5, False, 'red',0.1,False)
-#print('\n\n\n')
-#time.sleep(1)
-#draw_knot(g+t)
+g = generate_peppino(5)
+t = t_moves(10, g[-1], 0.5, 0.5, False, 'red',0.1,False)
+print('\n\n\n')
+time.sleep(1)
+draw_knot(g+t)
 
 knot = ''' ┌───────┐ 
  │ ┌───┐ │ 
