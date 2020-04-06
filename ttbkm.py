@@ -341,10 +341,13 @@ def draw_knot(state):
 
 def knot_to_coords(knot):
     """Convert knot string to list of coordinates representing knot."""
+    # split up the text
+    text = knot.split('\n')
+
     # work our way down moving left or right
     # first active end will always be vertical
     coords = []
-    for y, line in enumerate(knot.split('\n')):
+    for y, line in enumerate(text):
         # y=0 is the top
         row = []
         # this is only relevant coordinate in vertical lines
@@ -390,9 +393,63 @@ def knot_to_coords(knot):
                 coords.extend(row)
         else:
             pass
+    # add the bottom edge of the knot loop
+    # └──────┘
+    coords.append([coords[-1][0],coords[-1][1]+1,0])
+    coords.append([len(text[0])-2,coords[-1][1],0])
+    # now add appropriate number of loops
+    for j in range(int((len(text[0])+1)/4)):
+        # up-left component
+        # ───┐
+        #    │
+        coords.append([coords[-1][0],j,0])
+        # for the last segment we need to shift it
+        if j == int((len(text[0])+1)/4)-1:
+            coords.append([(j*2),coords[-1][1],0])
+        else:
+            coords.append([(j*2)+1,coords[-1][1],0])
+        if j != int((len(text[0])+1)/4)-1:
+            # down-right component
+            # │
+            # └───
+            coords.append([coords[-1][0],coords[-3][1]-1,0])
+            coords.append([coords[-3][0]-2,coords[-1][1],0])
     return coords
 
+def analyze_coords(coords):
+    """Use pyknotid to analyze generated knot coordinates."""
 
+    # first make sure we have pyknotid imported
+    try:
+        from pyknotid.spacecurves import Knot
+    except:
+        print("You must have pyknotid installed for the analysis!")
+        return
+    # check if sympy is installed
+    try:
+        import sympy
+    except:
+        print("You must have sympy installed for the analysis!")
+        return
+
+    # make Knot object
+    k=Knot(coords)
+
+    # find reduced gauss_code
+    gauss_code = k.gauss_code()
+    gauss_code.simplify()
+
+    # crossing number
+    crossing_num = len(gauss_code)
+
+    # alexander polynomial
+    alexander_poly = str(k.alexander_polynomial(variable=sympy.Symbol("t")))
+    
+    print(f"Crossing number: {crossing_num}")
+    print(f"Gauss code: {str(gauss_code)}")
+    print(f"Alexander polynomial: {alexander_poly}")
+
+    return (str(gauss_code), crossing_num, alexander_poly)
 
 # ─ ┌ └ ┐ ┘
 
@@ -421,6 +478,5 @@ knot = ''' ┌───────┐
 
 print(knot)
 print(knot_to_coords(knot))
-
 
 
