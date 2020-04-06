@@ -496,6 +496,16 @@ def analyze_coords(coords, path=False, quiet=False):
 
     return results
 
+def write_header(path):
+    """Initialize csv file with appropriate header for knot data."""
+    
+    # warning, will overwrite the file if it already exists
+    with open(path, 'w') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(("gauss","crossingnum","alexander"))
+
+    return
+
 # ┆
 #g = generate_peppino(2)
 #t = t_steps(10, g, 0.5, 0.5, False, 'red',0.1,False)
