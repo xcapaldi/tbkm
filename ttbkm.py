@@ -7,24 +7,27 @@
 # compare raymer initial conditions
 # versus our own
 #
-#
-import random as r
-import time
-
-term_colors = {'black':'30','red':'31','green':'32','yellow':'33','blue':'34','magenta':'35','cyan':'36','white':'37'}
-
-#def init_run(init_cond)
-
-
-
 #1   ┃│ │ │
 #2   ┗━┓│ │
 #3    │┃│ │
 #4    │┗│┓│
+#
+import random as r
+import time
+import csv
 
+term_colors = {'black':'30','red':'31','green':'32','yellow':'33','blue':'34','magenta':'35','cyan':'36','white':'37'}
 
-def braid_move(prev_state, k_right, k_above, quiet, color):
-    """Make an individual braid move.""" 
+def braid_step(prev_state, k_right=0.5, k_above=0.5, quiet=False, color=False):
+    """Given the previous braid step (forward component) as a string, generate the next braid step.
+
+    Keyword arguments:
+    prev_state -- previous braid step (forward component) as a string
+    k_right -- probability of active end moving to the right (default 0.5)
+    k_above -- probability of active end moving over an adjacent loop (default 0.5)
+    quiet -- suppress output (default False)
+    color -- color active end in terminal with one of black, red, green, yellow, blue, magenta, cyan or white (default False)
+    """ 
     
     # find the mobile end of the string
     end = prev_state.index('┃')
@@ -86,11 +89,22 @@ def braid_move(prev_state, k_right, k_above, quiet, color):
             print(c_cross)
             print(c_step)
         else:
-            print("Not a valid color!\nUse one of: black, red, green, yellow, blue, magenta, cyan or white")
+            print(''.join(cross))
+            print(''.join(step))
     return (''.join(cross), ''.join(step))
 
-def t_moves(t, init_state, k_right, k_above, quiet, color, sleep, path):
-    """Take designated number of braid moves from initial state."""
+def t_steps(t, init_state, k_right=0.5, k_above=0.5, quiet=False, color=False, sleep=False, path=False):
+    """Take t braid steps from initial state.
+
+    Keyword arguments:
+    init_state -- initial starting configuration of braid (all rows)
+    k_right -- probability of active end moving to the right (default 0.5)
+    k_above -- probability of active end moving over an adjacent loop (default 0.5)
+    quiet -- suppress output (default False)
+    color -- color active end in terminal with one of black, red, green, yellow, blue, magenta, cyan or white (default False)
+    sleep -- time in seconds to delay between displaying each braid step (default False)
+    path -- file in which you want to save the output braid (default False)
+    """
 
     # empty list to store output
     out_list = []
@@ -100,31 +114,34 @@ def t_moves(t, init_state, k_right, k_above, quiet, color, sleep, path):
     if '┃' not in init_state:
         # add the rows we know are present already
         for row in init_state:
+            print(row)
             out_list.append(row)
         prev_state = init_state[-1]
     # otherwise, just need the standard raymer row
     else:
+        print(init_state)
         out_list.append(init_state)
         prev_state = init_state
     
     # if you want to save the data, path should hold name the output file
     if path:
         with open(path, 'w') as f:
-            f.write(init_state + '\n')
-
+            # write the initial state
+            for row in out_list:
+                f.write(row + '\n')
             for i in range(t):
-                cross, prev_state = braid_move(prev_state, k_right, k_above, quiet, color)
+                cross, prev_state = braid_step(prev_state, k_right, k_above, quiet, color)
                 f.write(cross + '\n')
                 f.write(prev_state + '\n')
                 # write to list
                 out_list.append(cross)
-                out.list.append(prev_state)
+                out_list.append(prev_state)
                 # if you want to animate it, sleep is in seconds
                 if sleep:
                     time.sleep(sleep)
     else:
         for i in range(t):
-            cross, prev_state = braid_move(prev_state, k_right, k_above, quiet, color)
+            cross, prev_state = braid_step(prev_state, k_right, k_above, quiet, color)
             # write to list
             out_list.append(cross)
             out_list.append(prev_state)
@@ -134,7 +151,7 @@ def t_moves(t, init_state, k_right, k_above, quiet, color, sleep, path):
     return tuple(out_list)
 
 def generate_blank(loops):
-    """Generate a row with only the loops and spaces."""
+    """Generate row of desired width with only loops and spaces."""
     
     # create an empty list with enough room for the mobile end, loops, and spaces
     spaces = (loops * 2) + 1
@@ -151,7 +168,10 @@ def generate_blank(loops):
     return row
 
 def generate_raymer(loops):
-    """Generate initial configuration to start braid moves based on Raymer's paper."""
+    """Generate initial configuration to start braid moves where active end remains inside the loops.
+    
+    Format: ' │ │ │┃'
+    """
     
     init = generate_blank(loops)
     # the inner line holds the mobile end
@@ -161,7 +181,12 @@ def generate_raymer(loops):
 
 
 def generate_peppino(loops):
-    """Generate initial configuration to start braid moves based on our configuration."""
+    """Generate initial configuration to start braid moves where the active end has crossed outside the loops.
+
+    Format: ' │ │ │┃'
+            '┏━━━━━┛'
+            '┃│ │ │ '
+    """
 
     spaces = (loops * 2) + 1
 
@@ -188,7 +213,16 @@ def generate_peppino(loops):
     return (''.join(row_1), ''.join(row_2), ''.join(row_3))
 
 def generate_twist(loops):
-    """Generate initial configuration based on our model with a twist."""
+    """Generate initial configuration to start braid moves where the active end has crossed outside the loops and they have an initial twist.
+
+    Format: ' │ │ │┃'
+            '┏━━━━━┛'
+            '┃│ │ │ '
+            '┗━┓│ │ '
+            ' │┃│ │ '
+            '┏│┛│ │ '
+            '┃│ │ │ '
+    """
     
     # we can use the peppino generator for the first part of this configuration
     # we just add the additional lines
@@ -222,8 +256,13 @@ def generate_twist(loops):
     
     return (row_1, row_2, row_3,''.join(row_4),''.join(row_5),''.join(row_6),''.join(row_7))
 
-def draw_knot(state):
-    """Draw a schematic of the initial configuration before tumbling."""
+def draw_knot(state, quiet=False):
+    """Draw a full 2D representation of the braid as a knot.
+    
+    Keyword arguments:
+    state -- string of single initial state or tuple or list containing many rows of an initial state or a fully generated braid
+    quiet -- suppress output (default False)
+    """
     
     # create an empty list to store the whole knot
     knot_rows = []
@@ -312,48 +351,26 @@ def draw_knot(state):
                 if fin:
                     if p < point:
                         knot_rows[-1][p] = ' '
-            
     # finally we need to get the output
+    knot_str = ''
     for row in knot_rows:
-        print(''.join(row))
-    print('\n')
-    return knot_rows
-    #end = 
-
-#def file_to_coords(path):
-#    """Convert text file to list of coordinates representing knot."""
-#    # we will always move the active end downwards but we can move left or right.
-#    # first active end should always be vertical
-#    try:
-#        with open(path, 'r') as f:
-#            # list to store coordinates
-#            coords = []
-#            # follow the active end
-#            for y, line in enumerate(f):
-#                # y = 0 is top
-#                # first find end
-#                if coords == []:
-#                    for x, char in enumerate(line):
-#                        # x = 0 is left
-#                        # check if we have the first active end
-#                        # it should always be vertical
-#                        if char == '┃':
-#                            # all vertical lines fall at z=0
-#                            coords.append([x, y, 0])
-#                else:
-#                    coords.append(
-
-# find start
-# go down
-# if left, go left, if right go right
-# find start
-# append first
+        knot_str += ''.join(row) + '\n'
+    # print output
+    if not quiet:
+        print(knot_str)
+    return knot_str
 
 def knot_to_coords(knot):
-    """Convert knot string to list of coordinates representing knot."""
+    """Convert knot string to list of coordinates representing knot in 3D space."""
     # split up the text
     text = knot.split('\n')
-
+    
+    # because of a bug in pyknotid
+    # crossings won't be detected if the nodes are 
+    # directly above/below each other
+    # only the active end crosses above or below
+    # so we shift each point in x and y by a modifier amount
+    mod = 0.01
     # work our way down moving left or right
     # first active end will always be vertical
     coords = []
@@ -366,9 +383,9 @@ def knot_to_coords(knot):
             check = line[pos-1:pos+1]
             # check if its the final tail at the bottom of knot
             if '─' in check or '└' in check or '┘' in check: 
-                coords.append([pos, y, 1])
+                coords.append([pos+mod, y+mod, 1])
             else:
-                coords.append([pos, y, 0])
+                coords.append([pos+mod, y+mod, 0])
         # check for signs of mobile end
         elif '┓' in line or '┏' in line or '┛' in line or '┗' in line:
             # define left and right bounds
@@ -386,13 +403,13 @@ def knot_to_coords(knot):
             for x, char in enumerate(line):
                 if x >= left_bound and x <= right_bound:
                     if char in '┓┏┛┗':
-                        row.append([x,y,0])
+                        row.append([x+mod,y+mod,0])
                     # the string goes over
                     elif char == '━':
-                        row.append([x,y,1])
+                        row.append([x+mod,y+mod,1])
                     # the string goes under
                     elif char == '│':
-                        row.append([x,y,-1])
+                        row.append([x+mod,y+mod,-1])
                     else:
                         pass
             # invert row if necessary
@@ -429,8 +446,14 @@ def knot_to_coords(knot):
     #coords.append(coords[0])
     return coords
 
-def analyze_coords(coords):
-    """Use pyknotid to analyze generated knot coordinates."""
+def analyze_coords(coords, path=False, quiet=False):
+    """Use pyknotid to analyze generated knot coordinates.
+    
+    Keyword arguments:
+    coords -- list of coordinates in the form [x,y,z]
+    path -- path to csv in which gauss_code, crossing number and alexander polynomial will be appended (default False)
+    quiet -- suppress output (default False)
+    """
 
     # first make sure we have pyknotid imported
     try:
@@ -446,9 +469,7 @@ def analyze_coords(coords):
         return
 
     # make Knot object
-    k=Knot(coords)
-    k.plot(mode="matplotlib")
-    print(input("wait"))
+    k=Knot(coords, verbose=False, add_closure=True)
 
     # find reduced gauss_code
     gauss_code = k.gauss_code()
@@ -459,67 +480,72 @@ def analyze_coords(coords):
 
     # alexander polynomial
     alexander_poly = str(k.alexander_polynomial(variable=sympy.Symbol("t")))
-    
-    print(f"Crossing number: {crossing_num}")
-    print(f"Gauss code: {str(gauss_code)}")
-    print(f"Alexander polynomial: {alexander_poly}")
 
-    return (str(gauss_code), crossing_num, alexander_poly)
+    results = (str(gauss_code), crossing_num, alexander_poly)
 
-# ─ ┌ └ ┐ ┘
+    if not quiet:
+        print(f"Crossing number: {crossing_num}")
+        print(f"Gauss code: {str(gauss_code)}")
+        print(f"Alexander polynomial: {alexander_poly}")
+
+    # to save the data, path should hold name the output file
+    if path:
+        with open(path, 'a') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(results)
+
+    return results
 
 # ┆
-g = generate_peppino(2)
-t = t_moves(10, g, 0.5, 0.5, False, 'red',0.1,False)
-print('\n\n\n')
-time.sleep(1)
-draw_knot(t)
-
-knot = ''' ┌───────┐ 
- │ ┌───┐ │ 
- │ │┌┐ │ │ 
- │ │┃│ │ │ 
-┏━━━┛│ │ │ 
-┃│ │ │ │ │ 
-┗━┓│ │ │ │ 
- │┃│ │ │ │ 
-┏│┛│ │ │ │ 
-┃│ │ │ │ │ 
-┗│┓│ │ │ │ 
- │┃│ │ │ │ 
- │┃└─┘ │ │ 
- └┃────┘ │ 
-  └──────┘ '''
-
-print(knot)
-print(knot_to_coords(knot))
-
-knot2 = ''' 
- ┌───────┐ 
- │ ┌───┐ │ 
- │ │┌┐ │ │ 
- │ │┃│ │ │ 
-┏━━━┛│ │ │ 
-┃│ │ │ │ │ 
-┗│┓│ │ │ │ 
- │┃│ │ │ │ 
- │┃│ │ │ │ 
- │┃│ │ │ │ 
- │┃│ │ │ │ 
- │┃│ │ │ │ 
- │┃└─┘ │ │ 
- └┃────┘ │ 
-  └──────┘ '''
-
-print(knot2)
-print(knot_to_coords(knot2))
-
-for i in range(1):
-    t = t_moves(30, g, 0.5, 0.5, False, list(term_colors.keys())[i+1], 0, False)
-    s = draw_knot(t)
-    z = ''
-    for j in s:
-        z += ''.join(j) + '\n'
-    print(knot_to_coords(z))
-    analyze_coords(knot_to_coords(z))
+#g = generate_peppino(2)
+#t = t_steps(10, g, 0.5, 0.5, False, 'red',0.1,False)
+#time.sleep(1)
+#draw_knot(t)
+#
+#knot = ''' ┌───────┐ 
+# │ ┌───┐ │ 
+# │ │┌┐ │ │ 
+# │ │┃│ │ │ 
+#┏━━━┛│ │ │ 
+#┃│ │ │ │ │ 
+#┗━┓│ │ │ │ 
+# │┃│ │ │ │ 
+#┏│┛│ │ │ │ 
+#┃│ │ │ │ │ 
+#┗│┓│ │ │ │ 
+# │┃│ │ │ │ 
+# │┃└─┘ │ │ 
+# └┃────┘ │ 
+#  └──────┘ '''
+#
+#print(knot)
+#print(knot_to_coords(knot))
+#
+#knot2 = ''' 
+# ┌───────┐ 
+# │ ┌───┐ │ 
+# │ │┌┐ │ │ 
+# │ │┃│ │ │ 
+#┏━━━┛│ │ │ 
+#┃│ │ │ │ │ 
+#┗│┓│ │ │ │ 
+# │┃│ │ │ │ 
+# │┃│ │ │ │ 
+# │┃│ │ │ │ 
+# │┃│ │ │ │ 
+# │┃│ │ │ │ 
+# │┃└─┘ │ │ 
+# └┃────┘ │ 
+#  └──────┘ '''
+#
+#print(knot2)
+#print(knot_to_coords(knot2))
+#
+#for i in range(7):
+#    t = t_moves(100, g, 0.5, 0.5, False, list(term_colors.keys())[i+1], 0, False)
+#    s = draw_knot(t)
+#    z = ''
+#    for j in s:
+#        z += ''.join(j) + '\n'
+#    analyze_coords(knot_to_coords(z))
 
