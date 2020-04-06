@@ -94,12 +94,23 @@ def t_moves(t, init_state, k_right, k_above, quiet, color, sleep, path):
 
     # empty list to store output
     out_list = []
-
+    
+    # add the initial state to the output list
+    # if ┃ isn't present in the first layer of the init state, we can assume there are multiple rows
+    if '┃' not in init_state:
+        # add the rows we know are present already
+        for row in init_state:
+            out_list.append(row)
+        prev_state = init_state[-1]
+    # otherwise, just need the standard raymer row
+    else:
+        out_list.append(init_state)
+        prev_state = init_state
+    
     # if you want to save the data, path should hold name the output file
     if path:
         with open(path, 'w') as f:
             f.write(init_state + '\n')
-            prev_state = init_state
 
             for i in range(t):
                 cross, prev_state = braid_move(prev_state, k_right, k_above, quiet, color)
@@ -112,7 +123,6 @@ def t_moves(t, init_state, k_right, k_above, quiet, color, sleep, path):
                 if sleep:
                     time.sleep(sleep)
     else:
-        prev_state = init_state
         for i in range(t):
             cross, prev_state = braid_move(prev_state, k_right, k_above, quiet, color)
             # write to list
@@ -414,6 +424,9 @@ def knot_to_coords(knot):
             # └───
             coords.append([coords[-1][0],coords[-3][1]-1,0])
             coords.append([coords[-3][0]-2,coords[-1][1],0])
+    # add connection to start
+    # UNNECESSARY
+    #coords.append(coords[0])
     return coords
 
 def analyze_coords(coords):
@@ -434,6 +447,8 @@ def analyze_coords(coords):
 
     # make Knot object
     k=Knot(coords)
+    k.plot(mode="matplotlib")
+    print(input("wait"))
 
     # find reduced gauss_code
     gauss_code = k.gauss_code()
@@ -454,11 +469,11 @@ def analyze_coords(coords):
 # ─ ┌ └ ┐ ┘
 
 # ┆
-g = generate_peppino(5)
-t = t_moves(10, g[-1], 0.5, 0.5, False, 'red',0.1,False)
+g = generate_peppino(2)
+t = t_moves(10, g, 0.5, 0.5, False, 'red',0.1,False)
 print('\n\n\n')
 time.sleep(1)
-draw_knot(g+t)
+draw_knot(t)
 
 knot = ''' ┌───────┐ 
  │ ┌───┐ │ 
@@ -479,4 +494,32 @@ knot = ''' ┌───────┐
 print(knot)
 print(knot_to_coords(knot))
 
+knot2 = ''' 
+ ┌───────┐ 
+ │ ┌───┐ │ 
+ │ │┌┐ │ │ 
+ │ │┃│ │ │ 
+┏━━━┛│ │ │ 
+┃│ │ │ │ │ 
+┗│┓│ │ │ │ 
+ │┃│ │ │ │ 
+ │┃│ │ │ │ 
+ │┃│ │ │ │ 
+ │┃│ │ │ │ 
+ │┃│ │ │ │ 
+ │┃└─┘ │ │ 
+ └┃────┘ │ 
+  └──────┘ '''
+
+print(knot2)
+print(knot_to_coords(knot2))
+
+for i in range(1):
+    t = t_moves(30, g, 0.5, 0.5, False, list(term_colors.keys())[i+1], 0, False)
+    s = draw_knot(t)
+    z = ''
+    for j in s:
+        z += ''.join(j) + '\n'
+    print(knot_to_coords(z))
+    analyze_coords(knot_to_coords(z))
 
