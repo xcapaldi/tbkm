@@ -181,7 +181,7 @@ def generate_blank(loops, non_interacting=False):
             return
         else:
             # select random loops
-            for i in range(non_interacting):
+            while row.count('┆') < non_interacting:
                 row[2*(random.randint(1,loops))-1]='┆'
     elif type(non_interacting) is list or type(non_interacting) is tuple:
         # check that there are not too many non-interacting loops
@@ -206,31 +206,43 @@ def generate_blank(loops, non_interacting=False):
         return
     return row
 
-def generate_raymer(loops):
+def generate_raymer(loops, non_interacting=False):
     """Generate initial configuration to start braid moves where active end remains inside the loops.
     
     Format: ' │ │ │┃'
+    
+    Keyword arguments:
+    non_interacting -- loops which the active end cannot interact with (default False)
+                    -- if False, all loops are interactable
+                    -- if Integer (n), n loops randomly selected to be non-interactive
+                    -- if List (j,k,l), loops j, k and l (from left) are non-interactive
     """
     
-    init = generate_blank(loops)
+    init = generate_blank(loops, non_interacting)
     # the inner line holds the mobile end
     init[-1] = '┃'
 
     return ''.join(init)
 
 
-def generate_peppino(loops):
+def generate_peppino(loops, non_interacting=False):
     """Generate initial configuration to start braid moves where the active end has crossed outside the loops.
 
     Format: ' │ │ │┃'
             '┏━━━━━┛'
             '┃│ │ │ '
+    
+    Keyword arguments:
+    non_interacting -- loops which the active end cannot interact with (default False)
+                    -- if False, all loops are interactable
+                    -- if Integer (n), n loops randomly selected to be non-interactive
+                    -- if List (j,k,l), loops j, k and l (from left) are non-interactive
     """
 
     spaces = (loops * 2) + 1
 
     # row 1
-    row_1 = generate_blank(loops)
+    row_1 = generate_blank(loops, non_interacting)
     # the inner line holds the mobile end
     row_1[-1] = '┃'
 
@@ -251,7 +263,7 @@ def generate_peppino(loops):
     
     return (''.join(row_1), ''.join(row_2), ''.join(row_3))
 
-def generate_twist(loops):
+def generate_twist(loops, non_interacting=False):
     """Generate initial configuration to start braid moves where the active end has crossed outside the loops and they have an initial twist.
 
     Format: ' │ │ │┃'
@@ -261,37 +273,47 @@ def generate_twist(loops):
             ' │┃│ │ '
             '┏│┛│ │ '
             '┃│ │ │ '
+    
+    Keyword arguments:
+    non_interacting -- loops which the active end cannot interact with (default False)
+                    -- if False, all loops are interactable
+                    -- if Integer (n), n loops randomly selected to be non-interactive
+                    -- if List (j,k,l), loops j, k and l (from left) are non-interactive
     """
     
     # we can use the peppino generator for the first part of this configuration
     # we just add the additional lines
     
     spaces = (loops * 2) + 1
-
+    
+    row_1, row_2, row_3 = generate_peppino(loops, non_interacting)
+    
+    if row_3[1] == '┆':
+        first_loop = '┆'
+    else:
+        first_loop = '│'
     # row 4
-    row_4 = generate_blank(loops)
+    row_4 = list(row_3)
     # add first crossing
     row_4[0] = '┗'
     row_4[1] = '━'
     row_4[2] = '┓'
 
     # row 5
-    row_5 = generate_blank(loops)
+    row_5 = list(row_3)
     row_5[0] = ' '
-    row_5[1] = '│'
+    row_5[1] = first_loop
     row_5[2] = '┃'
 
     # row 6
-    row_6 = generate_blank(loops)
+    row_6 = list(row_3)
     row_6[0] = '┏'
-    row_6[1] = '│'
+    row_6[1] = first_loop
     row_6[2] = '┛'
 
     # row 7
-    row_7 = generate_blank(loops)
-    row_7[0] = '┃'
+    row_7 = list(row_3)
 
-    row_1, row_2, row_3 = generate_peppino(loops)
     
     return (row_1, row_2, row_3,''.join(row_4),''.join(row_5),''.join(row_6),''.join(row_7))
 
