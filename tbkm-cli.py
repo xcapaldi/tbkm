@@ -1,4 +1,5 @@
-# Terminal Tumbled Braid Knotting Model
+#  tbkm-cli
+#  Tumbled Braid Knotting Model
 
 # want to modify rates of crossing in given direction
 #                rates of crossing above and below
@@ -15,8 +16,13 @@
 import random
 import time
 import csv
+import argparse
+from subprocess import call
+from os import name
+from os import mkdir
+from shutil import get_terminal_size
 
-term_colors = {'black':'30','red':'31','green':'32','yellow':'33','blue':'34','magenta':'35','cyan':'36','white':'37'}
+term_colors = {'red':'31','green':'32','yellow':'33','blue':'34','magenta':'35','cyan':'36','white':'37'}
 
 def braid_step(prev_state, k_right=0.5, k_above=0.5, quiet=False, color=False):
     """Given the previous braid step (forward component) as a string, generate the next braid step.
@@ -37,14 +43,10 @@ def braid_step(prev_state, k_right=0.5, k_above=0.5, quiet=False, color=False):
     if end == 0:
         # can only go right
         right = True
-        # decide above/below
-        above = random.random() <= k_above
     # it's at right boundary
     elif end == len(prev_state) - 1:
         # can only go left
         right = False
-        # decide above/below
-        above = random.random() <= k_above
     # check if there are interactable strands on the left
     elif '│' not in prev_state[1:end]:
         # can only go right
@@ -56,9 +58,10 @@ def braid_step(prev_state, k_right=0.5, k_above=0.5, quiet=False, color=False):
     else:
         # decide direction
         right = random.random() <= k_right
-        # decide above/below
-        above = random.random() <= k_above
 
+    # decide above/below
+    above = random.random() <= k_above
+    
     # construct braid move (two lines)
     # first copy previous
     cross = list(prev_state)
@@ -79,7 +82,10 @@ def braid_step(prev_state, k_right=0.5, k_above=0.5, quiet=False, color=False):
                         cross[i] = '━'
     else:
         # find next interactable loop
-        target = prev_state[:end].index('│')
+        check_region = list(prev_state[:end])
+        # we want to find the first element from the end, not from the beginning
+        check_region.reverse()
+        target = end - check_region.index('│') - 1
         # add turn
         cross[end] = '┛'
         # add cross over loop
@@ -136,7 +142,8 @@ def t_steps(t, init_state, k_right=0.5, k_above=0.5, quiet=False, color=False, s
     if '┃' not in init_state:
         # add the rows we know are present already
         for row in init_state:
-            print(row)
+            if not quiet:
+                print(row)
             out_list.append(row)
         prev_state = init_state[-1]
     # otherwise, just need the standard raymer row
@@ -360,7 +367,7 @@ def draw_knot(state, quiet=False):
         knot_rows.append(list(state))
 
     # record number of loops for later use
-    loops = knot_rows[0].count('│')
+    loops = knot_rows[0].count('│') + knot_rows[0].count('┆')
 
     # extend rows appropriately
     # each need double the elements - assume the outer 'end' will terminate at the same level as these rows
@@ -589,56 +596,120 @@ def write_header(path):
 
     return
 
-# ┆
-#g = generate_peppino(2)
-#t = t_steps(10, g, 0.5, 0.5, False, 'red',0.1,False)
-#time.sleep(1)
-#draw_knot(t)
-#
-#knot = ''' ┌───────┐ 
-# │ ┌───┐ │ 
-# │ │┌┐ │ │ 
-# │ │┃│ │ │ 
-#┏━━━┛│ │ │ 
-#┃│ │ │ │ │ 
-#┗━┓│ │ │ │ 
-# │┃│ │ │ │ 
-#┏│┛│ │ │ │ 
-#┃│ │ │ │ │ 
-#┗│┓│ │ │ │ 
-# │┃│ │ │ │ 
-# │┃└─┘ │ │ 
-# └┃────┘ │ 
-#  └──────┘ '''
-#
-#print(knot)
-#print(knot_to_coords(knot))
-#
-#knot2 = ''' 
-# ┌───────┐ 
-# │ ┌───┐ │ 
-# │ │┌┐ │ │ 
-# │ │┃│ │ │ 
-#┏━━━┛│ │ │ 
-#┃│ │ │ │ │ 
-#┗│┓│ │ │ │ 
-# │┃│ │ │ │ 
-# │┃│ │ │ │ 
-# │┃│ │ │ │ 
-# │┃│ │ │ │ 
-# │┃│ │ │ │ 
-# │┃└─┘ │ │ 
-# └┃────┘ │ 
-#  └──────┘ '''
-#
-#print(knot2)
-#print(knot_to_coords(knot2))
-#
-#for i in range(7):
-#    t = t_moves(100, g, 0.5, 0.5, False, list(term_colors.keys())[i+1], 0, False)
-#    s = draw_knot(t)
-#    z = ''
-#    for j in s:
-#        z += ''.join(j) + '\n'
-#    analyze_coords(knot_to_coords(z))
 
+def run_model(runs, t, init_config, k_right=0.5, k_above=0.5, quiet=False, color='random', sleep=False, save_braids=False, path=False):
+    """Run multiple tumbling models and optionally save the data.
+
+    Keyword arguments:
+    init_state -- initial starting configuration of braid (all rows)
+    k_right -- probability of active end moving to the right (default 0.5)
+    k_above -- probability of active end moving over an adjacent loop (default 0.5)
+    quiet -- suppress output (default False)
+    color -- color active end in terminal with one of red, green, yellow, blue, magenta, cyan or white
+             if random, each run will display with a random color from those listed above (default random)
+    sleep -- time in seconds to delay between displaying each braid step (default False)
+    save_braids -- boolean to save each braid as a textfile in a subdirectory with the same name as the csv in path (default False)
+    path -- csv file in which you want to save the output analysis data (default False)
+    """
+    
+    # record start time
+    start_time = time.time()
+    
+    # determine command to run when clearing output
+    if name == 'nt':
+        clear_cmd = 'cls'
+    else:
+        clear_cmd = 'clear'
+    
+    # clear screen initially
+    ret_code = call(clear_cmd)
+    
+    # get available space for progress bar 
+    columns, lines = get_terminal_size()
+    columns = columns - 17 - 2 * len(str(runs))
+    
+
+    # initialize path where braids are saved
+    braid_path = False
+    if save_braids:
+        if not path:
+            print("You must include the path to a file if you want to save the individual braids!.")
+            return
+        else:
+            if '.' in path:
+                ext = path.index('.')
+                braid_dir = path[:-ext]
+                mkdir(braid_dir)
+            else:
+                braid_dir = path
+                mkdir(braid_dir)
+
+    if path:
+        with open(path, 'w') as csvfile:
+            writer = csv.writer(csvfile)
+            # write header
+            writer.writerow(("gauss","crossingnum","alexander"))
+            # generate data
+            for run in range(runs):
+                # if we can see whole braid, show progress at top
+                if lines - 40 >= t:
+                    bot_print = False
+                    progress = int(columns * ((run+1)/runs))
+                    print('\n')
+                    print(f"[{'█'*progress}{'-'*(columns-progress)}] {run+1}/{runs} {round(((run+1)/runs)*100)}% {round(time.time()-start_time,1)}s")
+                    print('\n')
+                else:
+                    print('\n')
+                    bot_print = True
+                # random colors each run if desired
+                if color == 'random':
+                    active_color = random.choice(list(term_colors.keys()))
+                # define where each braid should be saved
+                if save_braids:
+                    braid_path = braid_dir + '/' + str(run+1) + '.txt'
+                # generate braid
+                braid = t_steps(t, init_config, k_right=k_right, k_above=k_above, quiet=quiet, color=active_color, sleep=sleep, path=braid_path)
+                # show progress at bottom of terminal
+                if bot_print:
+                    print('\n')
+                    progress = int(columns * ((run+1)/runs))
+                    print(f"[{'█'*progress}{'-'*(columns-progress)}] {run+1}/{runs} {round(((run+1)/runs)*100)}% {round(time.time()-start_time,1)}s")
+                knot = draw_knot(braid, quiet=True)
+                coords = knot_to_coords(knot)
+                gauss_code, crossing_num, alexander_poly = analyze_coords(coords, path=False, quiet=True)
+                # write data
+                writer.writerow((gauss_code, crossing_num, alexander_poly))
+                # clear screen
+                ret_code = call(clear_cmd)
+    else:
+        # generate data
+        for run in range(runs):
+            # if we can see whole braid, show progress at top
+            if lines - 40 >= t:
+                bot_print = False
+                progress = int(columns * ((run+1)/runs))
+                print('\n')
+                print(f"[{'█'*progress}{'-'*(columns-progress)}] {run+1}/{runs} {round(((run+1)/runs)*100)}% {round(time.time()-start_time,1)}s")
+                print('\n')
+            else:
+                print('\n')
+                bot_print = True
+            # random colors each run if desired
+            if color == 'random':
+                active_color = random.choice(list(term_colors.keys()))
+            # generate braid
+            braid = t_steps(t, init_config, k_right=k_right, k_above=k_above, quiet=quiet, color=active_color, sleep=sleep, path=braid_path)
+            # show progress at bottom of terminal
+            if bot_print:
+                print('\n')
+                progress = int(columns * ((run+1)/runs))
+                print(f"[{'█'*progress}{'-'*(columns-progress)}] {run+1}/{runs} {round(((run+1)/runs)*100)}% {round(time.time()-start_time,1)}s")
+            knot = draw_knot(braid, quiet=True)
+            coords = knot_to_coords(knot)
+            gauss_code, crossing_num, alexander_poly = analyze_coords(coords, path=False, quiet=True)
+            # clear screen
+            ret_code = call(clear_cmd)
+    # clear screen
+    ret_code = call(clear_cmd)
+    # print results
+    print(f"ttbkm: {runs} runs completed in {round(time.time()-start_time,1)}s")
