@@ -27,8 +27,8 @@ def braid_step(prev_state, k_right=0.5, k_above=0.5, quiet=False, color=False):
     k_above -- probability of active end moving over an adjacent loop (default 0.5)
     quiet -- suppress output (default False)
     color -- color active end in terminal with one of black, red, green, yellow, blue, magenta, cyan or white (default False)
-    """ 
-    
+    """
+
     # find the mobile end of the string
     end = prev_state.index('┃')
 
@@ -45,37 +45,59 @@ def braid_step(prev_state, k_right=0.5, k_above=0.5, quiet=False, color=False):
         right = False
         # decide above/below
         above = random.random() <= k_above
+    # check if there are interactable strands on the left
+    elif '│' not in prev_state[1:end]:
+        # can only go right
+        right = True
+    elif '│' not in prev_state[end:]:
+        # can only go left
+        right = False
     # otherwise there will be strands on either side
     else:
         # decide direction
         right = random.random() <= k_right
         # decide above/below
         above = random.random() <= k_above
-    
+
     # construct braid move (two lines)
     # first copy previous
     cross = list(prev_state)
     if right:
+        # find next interactable loop
+        target = end + prev_state[end:].index('│')
+        # add turn
         cross[end] = '┗'
-        cross[end+2] = '┓'
+        # add cross over loop
+        cross[target+1] = '┓'
+        # add horizontal movement
         if above:
-            cross[end+1] = '━'
+            cross[end+1:target+1] = ['━']*len(cross[end+1:target+1])
         else:
-            cross[end+1] = '│'
+            for i, element in enumerate(cross):
+                if i < target and i > end:
+                    if element in ' ┆':
+                        cross[i] = '━'
     else:
+        # find next interactable loop
+        target = prev_state[:end].index('│')
+        # add turn
         cross[end] = '┛'
-        cross[end-2] = '┏'
+        # add cross over loop
+        cross[target-1] = '┏'
         if above:
-            cross[end-1] = '━'
+            cross[target:end] = ['━']*len(cross[target:end])
         else:
-            cross[end-1] = '│'
+            for i, element in enumerate(cross):
+                if i > target and i < end:
+                    if element in ' ┆':
+                        cross[i] = '━'
     # now take forward step
     step = list(prev_state)
     step[end] = ' '
     if right:
-        step[end+2] = '┃'
+        step[target+1] = '┃'
     else:
-        step[end-2] = '┃'
+        step[target-1] = '┃'
 
     # check if output should not be displayed
     if not quiet:
