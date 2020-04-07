@@ -12,7 +12,7 @@
 #3    │┃│ │
 #4    │┗│┓│
 #
-import random as r
+import random
 import time
 import csv
 
@@ -38,19 +38,19 @@ def braid_step(prev_state, k_right=0.5, k_above=0.5, quiet=False, color=False):
         # can only go right
         right = True
         # decide above/below
-        above = r.random() <= k_above
+        above = random.random() <= k_above
     # it's at right boundary
     elif end == len(prev_state) - 1:
         # can only go left
         right = False
         # decide above/below
-        above = r.random() <= k_above
+        above = random.random() <= k_above
     # otherwise there will be strands on either side
     else:
         # decide direction
-        right = r.random() <= k_right
+        right = random.random() <= k_right
         # decide above/below
-        above = r.random() <= k_above
+        above = random.random() <= k_above
     
     # construct braid move (two lines)
     # first copy previous
@@ -150,8 +150,15 @@ def t_steps(t, init_state, k_right=0.5, k_above=0.5, quiet=False, color=False, s
                 time.sleep(sleep)
     return tuple(out_list)
 
-def generate_blank(loops):
-    """Generate row of desired width with only loops and spaces."""
+def generate_blank(loops, non_interacting=False):
+    """Generate row of desired width with only loops and spaces.
+
+    Keyword arguments:
+    non_interacting -- loops which the active end cannot interact with (default False)
+                    -- if False, all loops are interactable
+                    -- if Integer (n), n loops randomly selected to be non-interactive
+                    -- if List (j,k,l), loops j, k and l (from left) are non-interactive
+    """
     
     # create an empty list with enough room for the mobile end, loops, and spaces
     spaces = (loops * 2) + 1
@@ -165,6 +172,38 @@ def generate_blank(loops):
         # odd lines have loops
         else:
             row[i] = '│'
+    if not non_interacting:
+        return row
+    elif type(non_interacting) is int:
+        # check that the number of non-interacting loops is less than number of loops
+        if non_interacting > loops - 1:
+            print("non-interacting loops must be fewer than total loops")
+            return
+        else:
+            # select random loops
+            for i in range(non_interacting):
+                row[2*(random.randint(1,loops))-1]='┆'
+    elif type(non_interacting) is list or type(non_interacting) is tuple:
+        # check that there are not too many non-interacting loops
+        if len(non_interacting) > loops - 1:
+            print("non-interacting loops must be fewer than total loops")
+            return
+        for j in non_interacting:
+            # check is any element fall outside of loop
+            if j > loops:
+                print("non-interacting loop is outside loop index")
+                return
+            # check that there are not duplicates
+            if non_interacting.count(j) > 1:
+                print("duplicates in list of non-interacting loops")
+                return
+        # passes all checks, replace appropriate elements
+        for loop in non_interacting:
+            row[2*loop-1]='┆'
+    else:
+        # incorrect input
+        print("non_interacting needs to be an integer, list, tuple or False")
+        return
     return row
 
 def generate_raymer(loops):
