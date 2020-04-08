@@ -5,7 +5,7 @@
 Generate (and analyze) knots with the terminal braid knotting model.
 Knot are drawn completely in the terminal using unicode box-drawing characters and as such, the raw data can be saved as text files.
 
-TODO cool knot
+![Demo](demo.png?raw=true "Demo")
 
 ## Background
 
@@ -99,20 +99,17 @@ There are three initial configurations: raymer, peppino and twist.
 #### raymer
 The raymer configuration represents a coil which has no initial crossings.
 
-TODO raymer schematic
-TODO raymer example
+![Raymer configuration](raymer.png?raw=true "Raymer configuration")
 
 #### peppino
 The peppino configuration has the terminal end of the coil lying outside the loops which means it crosses all loops before beginning the run.
 
-TODO peppino schematic
-TODO peppino example
+![Peppino configuration](peppino.png?raw=true "Peppino configuration")
 
 #### twist
 The twisted configuration is the same as the peppino configuration but the loops have been twised once while the terminal end remains stationary outside of them.
 
-TODO twist schematic
-TODO twist example
+![Twist configuration](twist.png?raw=true "twist configuration")
 
 #### -l LOOPS, --loops LOOPS
 
@@ -229,37 +226,61 @@ Generate a single braid (Raymer) with 3 loops and 5 steps in yellow:
 ```
 python tbkm.py raymer -l 3 braid -m 5 -c yellow
 ```
-TODO output
+
+![Example 1](example_1.png?raw=true "Example 1")
 
 Generate a single braid (Peppino) with 5 loops (2 are inaccessible) and 10 steps in blue:
 
 ```
 python tbkm.py peppino -l 5 -i 2 braid -m 10 -c blue
 ```
-TODO output
+
+![Example 2](example_2.png?raw=true "Example 2")
 
 Generate a knot (twist) with 5 loops (1st and 3rd loop inaccessible) and 5 steps:
 
 ```
 python tbkm.py twist -l 5 knot -m 5 -I 1 3
 ```
-TODO output
+
+![Example 3](example_3.png?raw=true "Example 3")
 
 Generate a knot (Peppino) with 3 loops and 5 steps  and analyze the result:
 
 ```
 python tbkm.py peppino -l 3 analyze -m 5
 ```
-TODO output
+Output:
+
+```
+Crossing number: 8
+Gauss code: 1+a,2+a,3+a,4-a,5+c,6-a,7+a,8+a,3-a,4+a,2-a,5-c,8-a,1-a,6+a,7-a
+Alexander polynomial: t**5 - t**4 + t**3 - t**2 + t
+```
 
 Generate 10 knots (twist), each with 4 loops and 5 steps in random colors.
-Add a delay between each step to look cool for this documentation.
 Save the analysis and raw data:
 
 ```
 python tbkm.py twist -l 4 model -m 5 -n 10 -c random -d 0.05 -p demo.csv -s
 ```
-TODO output
+Output:
+
+```
+gauss,                           crossingnum, alexander
+"1+a,2+a,3+a,8-a,9-a,10-a,11+a,
+ 3-a,8+a,2-a,9+a,1-a,10+a,11-a", 7,           t**6 - t**5 + t**4 - 2*t**2 + 2*t
+----,                            0,           1
+----,                            0,           1
+"3+a,10-a,11+a,3-a,10+a,11-a",   3,           -t - (1 - t)**2
+----,                            0,           1
+----,                            0,           1
+"1+a,2+a,9-a,10-a,11+a,2-a,9+a,
+ 1-a,10+a,11-a",                 5,           -t**4 + t**3 - t**2 + t - 1
+----,                            0,           1
+----,                            0,           1
+----,                            0,           1
+```
 
 ## License
 
