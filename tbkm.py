@@ -9,6 +9,7 @@
 import random
 import time
 import csv
+import argparse
 from subprocess import call
 from os import name
 from os import mkdir
@@ -680,7 +681,7 @@ def run_model(
             return
         else:
             if "." in path:
-                ext = path.index(".")
+                ext = path.index(".") + 1
                 braid_dir = path[:-ext]
                 mkdir(braid_dir)
             else:
@@ -785,4 +786,209 @@ def run_model(
     # clear screen
     ret_code = call(clear_cmd)
     # print results
-    print(f"ttbkm: {runs} runs completed in {round(time.time()-start_time,1)}s")
+    print(f"tbkm: {runs} runs completed in {round(time.time()-start_time,1)}s")
+
+    return
+
+
+# parse commandline input
+def cli():
+    parser = argparse.ArgumentParser(
+        description="generate (and analyze) knots with a terminal braid knotting model"
+    )
+    parser.add_argument(
+        "select",
+        choices=["braid", "knot", "analyze", "model"],
+        help="generate single braid, braid + closed knot, braid + closed knot + analysis or perform multiple runs",
+    )
+    parser.add_argument(
+        "configuration",
+        choices=["raymer", "peppino", "twist"],
+        help="select the initial configuration of coil and its terminal end",
+    )
+
+    parser.add_argument(
+        "-l", "--loops", type=int, help="<required> number of loops", required=True
+    )
+    parser.add_argument(
+        "-i",
+        "--inactive",
+        type=int,
+        help="number of random loops which are inaccessible to the terminal end (it will always pass over them)",
+    )
+    parser.add_argument(
+        "-I",
+        "--spec_inactive",
+        nargs="*",
+        type=int,
+        help="specific loops (from left) which are inaccessible to the terminal end (it will always pass over them)",
+    )
+
+    parser.add_argument(
+        "-r",
+        "--right",
+        default=0.5,
+        type=float,
+        help="probability of terminal end moving right (default 0.5)",
+    )
+    parser.add_argument(
+        "-a",
+        "--above",
+        default=0.5,
+        type=float,
+        help="probability of terminal end crossing above adjacent loop instead of below (default 0.5)",
+    )
+    parser.add_argument(
+        "-m",
+        "--moves",
+        type=int,
+        help="<Required> number of moves the terminal end will make",
+        required=True,
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        help="suppress display of braid(s) or knot",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-c",
+        "--color",
+        choices=[
+            "red",
+            "green",
+            "yellow",
+            "blue",
+            "magenta",
+            "cyan",
+            "white",
+            "random",
+        ],
+        help="display terminal end in selected color",
+        default=False,
+    )
+    parser.add_argument(
+        "-d",
+        "--delay",
+        type=float,
+        help="delay (in seconds) between each move of the terminal end",
+        default=False,
+    )
+    parser.add_argument(
+        "-p",
+        "--path",
+        type=str,
+        help="path of directory (model) or file (braid/knot) to save generated data",
+        default=False,
+    )
+
+    parser.add_argument(
+        "-n", "--runs", type=int, help="number of times to run the braid knotting model"
+    )
+    parser.add_argument(
+        "-s",
+        "--save_braids",
+        help="save individual braid files produced during analysis",
+        action="store_true",
+    )
+
+    args = parser.parse_args()
+
+    # check rate inputs
+    if args.right < 0 or args.right > 1:
+        print("the rate of crossing to the right must be between 0 and 1")
+        return
+    if args.above < 0 or args.above > 1:
+        print("the rate of crossing above must be between 0 and 1")
+        return
+
+    # check that number of runs has been specified with the model
+    if args.select == "model" and not args.runs:
+        print("specify number of runs to perform with the model")
+        return
+
+    # pick random color if not using model
+    if args.select != "model" and args.color == "random":
+        color = random.choice(list(term_colors.keys()))
+    else:
+        color = args.color
+
+    # Save non-interacting values
+    if not args.inactive:
+        if not args.spec_inactive:
+            inactive = False
+        else:
+            inactive = args.spec_inactive
+    else:
+        inactive = args.inactive
+
+    # generate the initial configuration
+    if args.configuration == "raymer":
+        init_config = generate_raymer(args.loops, non_interacting=inactive)
+    elif args.configuration == "peppino":
+        init_config = generate_peppino(args.loops, non_interacting=inactive)
+    elif args.configuration == "twist":
+        init_config = generate_twist(args.loops, non_interacting=inactive)
+
+    # braid
+    if args.select == "braid":
+        braid = t_steps(
+            args.moves,
+            init_config,
+            k_right=args.right,
+            k_above=args.above,
+            quiet=args.quiet,
+            color=color,
+            sleep=args.delay,
+            path=args.path,
+        )
+        return
+    # knot
+    elif args.select == "knot":
+        braid = t_steps(
+            args.moves,
+            init_config,
+            k_right=args.right,
+            k_above=args.above,
+            quiet=args.quiet,
+            color=color,
+            sleep=args.delay,
+            path=args.path,
+        )
+        knot = draw_knot(braid, quiet=args.quiet)
+    # analyze
+    elif args.select == "analyze":
+        braid = t_steps(
+            args.moves,
+            init_config,
+            k_right=args.right,
+            k_above=args.above,
+            quiet=args.quiet,
+            color=color,
+            sleep=args.delay,
+            path=args.path,
+        )
+        knot = draw_knot(braid, quiet=args.quiet)
+        coords = knot_to_coords(knot)
+        analysis = analyze_coords(coords, path=False, quiet=args.quiet)
+    # model
+    elif args.select == "model":
+        run_model(
+            args.runs,
+            args.moves,
+            init_config,
+            k_right=args.right,
+            k_above=args.above,
+            quiet=args.quiet,
+            color=color,
+            sleep=args.delay,
+            save_braids=args.save_braids,
+            path=args.path,
+        )
+
+    return
+
+
+# start the cli interface
+# comment out this line if you just want to import the module for scripting
+cli()

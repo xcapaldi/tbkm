@@ -2,7 +2,7 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-Generate (and analyze) knots produced using a terminal braid knotting model.
+Generate (and analyze) knots with a terminal braid knotting model.
 
 (example knot)
 (example full knot)
@@ -33,7 +33,52 @@ This model showed similarities with their experimental data but failed to descri
 
 ## Usage
 
-No CLI interface has been written because you will likely want to import this module and write your own sequence of experiments.
+```
+usage: tbkm.py [-h] -l LOOPS [-i INACTIVE]
+               [-I [SPEC_INACTIVE [SPEC_INACTIVE ...]]] [-r RIGHT] [-a ABOVE]
+               -m MOVES [-q]
+               [-c {red,green,yellow,blue,magenta,cyan,white,random}]
+               [-d DELAY] [-p PATH] [-n RUNS] [-s]
+               {braid,knot,analyze,model} {raymer,peppino,twist}
+
+generate (and analyze) knots with a terminal braid knotting model
+
+positional arguments:
+  {braid,knot,analyze,model}
+                        generate single braid, braid + closed knot, braid +
+                        closed knot + analysis or perform multiple runs
+  {raymer,peppino,twist}
+                        select the initial configuration of coil and its
+                        terminal end
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LOOPS, --loops LOOPS
+                        <required> number of loops
+  -i INACTIVE, --inactive INACTIVE
+                        number of random loops which are inaccessible to the
+                        terminal end (it will always pass over them)
+  -I [SPEC_INACTIVE [SPEC_INACTIVE ...]], --spec_inactive [SPEC_INACTIVE [SPEC_INACTIVE ...]]
+                        specific loops (from left) which are inaccessible to
+                        the terminal end (it will always pass over them)
+  -r RIGHT, --right RIGHT
+                        probability of terminal end moving right (default 0.5)
+  -a ABOVE, --above ABOVE
+                        probability of terminal end crossing above adjacent
+                        loop instead of below (default 0.5)
+  -m MOVES, --moves MOVES
+                        <Required> number of moves the terminal end will make
+  -q, --quiet           suppress display of braid(s) or knot
+  -c {red,green,yellow,blue,magenta,cyan,white,random}, --color {red,green,yellow,blue,magenta,cyan,white,random}
+                        display terminal end in selected color
+  -d DELAY, --delay DELAY
+                        delay (in seconds) between each move of the terminal
+                        end
+  -p PATH, --path PATH  path of directory (model) or file (braid/knot) to save
+                        generated data
+  -n RUNS, --runs RUNS  number of times to run the braid knotting model
+  -s, --save_braids     save individual braid files produced during analysis
+  ```
 
 ### Setup
 
