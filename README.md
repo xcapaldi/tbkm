@@ -2,16 +2,17 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-Generate (and analyze) knots with a terminal braid knotting model.
+Generate (and analyze) knots with the terminal braid knotting model.
+Knot are drawn completely in the terminal using unicode box-drawing characters and as such, the raw data can be saved as text files.
 
-(example knot)
-(example full knot)
+TODO cool knot
 
 ## Background
 
 Raymer et al. proposed a simple knotting model to describe agitated knot formation.
-Knots form at the mobile end of an open string so their model simply involved a coiled chain where one end was able to move over or under adjacent strings randomly for each time step.
-This model showed similarities with their experimental data but failed to describe our subsequent work.
+Knots form at the mobile end of an open string so their model involved a coiled chain where one end was able to move over or under adjacent strands randomly for each time step.
+This model showed similarities with their experimental data but fails to describe our subsequent work.
+Please check their original publication for details:
 
 ```
 @article {raymer2007spontaneous,
@@ -31,7 +32,18 @@ This model showed similarities with their experimental data but failed to descri
 }
 ```
 
-## Usage
+We have submitted a publication for review on our experimental data and the results of our new knotting model.
+Upon publication, I will update this documentation and we ask that you cite our paper if you use this model or code for your own work.
+In the meantime, please feel free contact me at xavier.capaldi at mail.mcgill.ca
+
+## Requirements
+
+If you only want to generate unicode braids and knots, you don't need to install anything.
+
+The analysis however is performed using (Pyknotid)[https://github.com/SPOCKnots/pyknotid] and [Sympy](https://github.com/sympy/sympy).
+Please check out their respective pages and cite them if you use this project for your research.
+
+## Usage (examples below)
 
 ```
 usage: tbkm.py [-h] -l LOOPS [-i INACTIVE]
@@ -39,17 +51,17 @@ usage: tbkm.py [-h] -l LOOPS [-i INACTIVE]
                -m MOVES [-q]
                [-c {red,green,yellow,blue,magenta,cyan,white,random}]
                [-d DELAY] [-p PATH] [-n RUNS] [-s]
-               {braid,knot,analyze,model} {raymer,peppino,twist}
+               {raymer,peppino,twist} {braid,knot,analyze,model}
 
 generate (and analyze) knots with a terminal braid knotting model
 
 positional arguments:
-  {braid,knot,analyze,model}
-                        generate single braid, braid + closed knot, braid +
-                        closed knot + analysis or perform multiple runs
   {raymer,peppino,twist}
                         select the initial configuration of coil and its
                         terminal end
+  {braid,knot,analyze,model}
+                        generate single braid, braid + closed knot, braid +
+                        closed knot + analysis or perform multiple runs
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -78,44 +90,177 @@ optional arguments:
                         generated data
   -n RUNS, --runs RUNS  number of times to run the braid knotting model
   -s, --save_braids     save individual braid files produced during analysis
-  ```
+```
 
-### Setup
+### Initial configuration: {raymer, peppino, twist}
 
-There are three initial configurations: raymer, peppino and twisted.
-They can be generated with the generate_raymer(), generate_peppino(), generate_twised() functions respectively.
+There are three initial configurations: raymer, peppino and twist.
 
+#### raymer
 The raymer configuration represents a coil which has no initial crossings.
+
+TODO raymer schematic
+TODO raymer example
+
+#### peppino
 The peppino configuration has the terminal end of the coil lying outside the loops which means it crosses all loops before beginning the run.
-The twisted configuration is the same as the peppino configuration but the loops have been twised oncewhile the terminal end remains stationary outside them.
 
-You need to generate your initial configuration to do a run.
-Each of the generator functions take only two arguments: the number of loops and the non-interacting loops.
-By default non_interacting is False which means the terminal end is able to interact with any of the loops.
-If you set non_interacting=integer_n, n loops will be randomly selected to inaccessible to the terminal end.
-By inaccessible I mean the terminal end will always cross over them and never loop around them.
+TODO peppino schematic
+TODO peppino example
+
+#### twist
+The twisted configuration is the same as the peppino configuration but the loops have been twised once while the terminal end remains stationary outside of them.
+
+TODO twist schematic
+TODO twist example
+
+#### -l LOOPS, --loops LOOPS
+
+*required*
+
+This parameter determines how many loops are in your coil.
+In the braid model they are represented as thin vertical lines which lie parallel to the terminal end.
+
+#### -i INACTIVE, --inactive INACTIVE
+
+Number of loops (randomly selected) which are inaccessible to the terminal end (it will always pass over them).
+By inaccessible, I mean the terminal end will always cross over them and never loop around them.
 They are graphically represented by dashed lines but in the physical world this represents the terminal end only interacting with some subset of the overall coil because of confinment or rotation of the coil during agitation.
-If in you set non_interacting=list/tuple, those loops will be specifically made non-interacting.
-This is useful if you want to simulate a particular configuration many times.
 
-### Individual braids
+#### -I [SPEC_INACTIVE [SPEC_INACTIVE ...]], --spec_inactive [SPEC_INACTIVE [SPEC_INACTIVE ...]]
 
-Once you have your initial configuration, you can generate a single braid using t_steps() which takes the initial state.
-You can change the probabilities of going left or right and above or below adjacent strings.
-In addition, you can add a delay to the output if you want to give a presenation with it.
-You can also colorize the terminal end.
-Finally the resulting braid can be saved to a text for for analysis later.
+Specific loops (from left) which are inaccessible to the terminal end (it will always pass over them).
 
-### Individual knots
+Example: -I 1 3 5  ->  the first, third and fifth loop from the left will be inaccessible
 
-To generate a real knot, the loops need to be closed so you can use draw_knot() to generate the full knot from a braid.
+### Action {braid, knot, analyze, model}
 
-### Run model
+Several different actions can be performed after selected the initial configuration.
+Each action is dependend upon the previous step.
+In other words, *braid* form a braid, *knot* forms a braid and then a knot, . . .
+I suggest you read about the options for the desired action and those that come before it.
+
+#### braid
+
+A braid is formed by the terminal end.
+With each step it moves forward and either left or right and above or below.
+Obviously it's mobility is limited at the leftmost or rightmost positions.
+
+##### -m MOVES, --moves MOVES
+
+*required*
+
+This is the number of moves the terminal end will make.
+This operation is fast so you can easily generate very long braids if desired (that doesn't mean it will be fast to perform the analysis).
+
+##### -r RIGHT, --right RIGHT
+
+Probability of the terminal end moving to the right.
+Default value is *0.5*.
+
+##### -a ABOVE, --above ABOVE
+
+Probability of the terminal end crossing above instead of the below the adjacent string.
+Default value is *0.5*.
+
+##### -q, --quiet
+
+Suppress display of braid(s) or knot.
+
+##### -c {red,green,yellow,blue,magenta,cyan,white,random}, --color {red,green,yellow,blue,magenta,cyan,white,random}↩
+
+The terminal end is displayed thicker than the loops by default but you can additionally color it as long as your terminal supports color.
+By default, if this flag is unused, no color will be added.
+With this flag, you can color it red, green, yellow, blue, magenta, cyan or white.
+Additionally you can select random colors.
+When producing a lot of braids using *model* with *-c random* each braid will have a different color.
+The colors are not saved to the data files.
+
+##### -d DELAY, --delay DELAY
+
+A delay (in seconds) can be added between each movement of the terminal end.
+This significantly slows down data generation and analysis so I recommend only using it if you are presenting.
+
+##### -p PATH, --path PATH
+
+You can specify a path to a file where the braid data will be saved (as a text file).
+The extension is not added by default so you can add any extension you prefer.
+
+When used with *model* this is the path to the CSV file where the analysis results are saved.
+If the *--save_braids* flag is used as well, a directory of the same name (minus the .csv extension) will be made to hold the raw braid data.
+
+##### knot
+
+Braids are displayed as several adjacent strands with the terminal end.
+In reality they represent a knot which has to be a closed loop.
+*knot* will first generate a braid and then add the necessary closures and display the result to you.
+It is only useful for visualizing the knot and we don't save the data in this form since it is easily constructed from the braid data.
+
+##### analyze
+
+First a braid is formed, then the knot is drawn and finally Pyknotid and Sympy are used to performed the knot analysis and present the results to you.
+
+You can read more about the analysis process in the [Pyknotid ReadTheDocs](https://pyknotid.readthedocs.io/en/latest/).
+In essence, Reidemeister moves are performed repeatedly to determine the simplified knot structure.
+The Gauss code, minimum crossing number and Alexander polynomial will be presented.
+
+This process is computationally intensive and for complex knots can take a long time.
+
+##### model
 
 Most often, you won't be working with individual knots.
 Instead you'll want to run a given model many times, analyze the knots and save the resulting data.
+*model* generates multiple knots and can save the analysis results to a CSV file as described previously.
 
-You can use run_model() to do this.
-It still requires an initial configuration as generated above.
-This function also requires pyknotid and sympy to perform the knot analysis.
-The resulting data consists of the gauss code, minimum crossing number and alexander polynomial and can be saved to a csv (along with the raw braids if desired).
+###### -n RUNS, --runs RUNS
+
+#required*
+
+Number of knots to generate and analyze with the given parameters.
+
+###### -s, --save_braids
+
+If this flag is given (along with *-p*), a directory with the same name as the CSV file (minus extension) will be created and each generated braid will be saved within.
+
+## Examples
+
+Generate a single braid (Raymer) with 3 loops and 5 steps in yellow:
+
+```
+python tbkm.py raymer -l 3 braid -m 5 -c yellow
+```
+TODO output
+
+Generate a single braid (Peppino) with 5 loops (2 are inaccessible) and 10 steps in blue:
+
+```
+python tbkm.py peppino -l 5 -i 2 braid -m 10 -c blue
+```
+TODO output
+
+Generate a knot (twist) with 5 loops (1st and 3rd loop inaccessible) and 5 steps:
+
+```
+python tbkm.py twist -l 5 knot -m 5 -I 1 3
+```
+TODO output
+
+Generate a knot (Peppino) with 3 loops and 5 steps  and analyze the result:
+
+```
+python tbkm.py peppino -l 3 analyze -m 5
+```
+TODO output
+
+Generate 10 knots (twist), each with 4 loops and 5 steps in random colors.
+Add a delay between each step to look cool for this documentation.
+Save the analysis and raw data:
+
+```
+python tbkm.py twist -l 4 model -m 5 -n 10 -c random -d 0.05 -p demo.csv -s
+```
+TODO output
+
+## License
+
+This work is released under the MIT license.

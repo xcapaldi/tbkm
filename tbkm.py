@@ -681,8 +681,8 @@ def run_model(
             return
         else:
             if "." in path:
-                ext = path.index(".") + 1
-                braid_dir = path[:-ext]
+                ext = path.index(".")
+                braid_dir = path[: (ext - len(path))]
                 mkdir(braid_dir)
             else:
                 braid_dir = path
@@ -797,14 +797,14 @@ def cli():
         description="generate (and analyze) knots with a terminal braid knotting model"
     )
     parser.add_argument(
-        "select",
-        choices=["braid", "knot", "analyze", "model"],
-        help="generate single braid, braid + closed knot, braid + closed knot + analysis or perform multiple runs",
-    )
-    parser.add_argument(
         "configuration",
         choices=["raymer", "peppino", "twist"],
         help="select the initial configuration of coil and its terminal end",
+    )
+    parser.add_argument(
+        "select",
+        choices=["braid", "knot", "analyze", "model"],
+        help="generate single braid, braid + closed knot, braid + closed knot + analysis or perform multiple runs",
     )
 
     parser.add_argument(
