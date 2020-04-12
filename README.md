@@ -2,10 +2,10 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-Generate (and analyze) knots with the terminal braid knotting model.
+Generate (and analyze) knots with a terminal braid knotting model.
 Knot are drawn completely in the terminal using unicode box-drawing characters and as such, the raw data can be saved as text files.
 
-![Demo](demo.png?raw=true "Demo")
+![Demo](pictures/demo.png?raw=true "Demo")
 
 ## Background
 
@@ -24,7 +24,6 @@ Please check their original publication for details:
 	year = {2007},
 	doi = {10.1073/pnas.0611320104},
 	publisher = {National Academy of Sciences},
-	abstract = {It is well known that a jostled string tends to become knotted; yet the factors governing the {\textquotedblleft}spontaneous{\textquotedblright} formation of various knots are unclear. We performed experiments in which a string was tumbled inside a box and found that complex knots often form within seconds. We used mathematical knot theory to analyze the knots. Above a critical string length, the probability P of knotting at first increased sharply with length but then saturated below 100\%. This behavior differs from that of mathematical self-avoiding random walks, where P has been proven to approach 100\%. Finite agitation time and jamming of the string due to its stiffness result in lower probability, but P approaches 100\% with long, flexible strings. We analyzed the knots by calculating their Jones polynomials via computer analysis of digital photos of the string. Remarkably, almost all were identified as prime knots: 120 different types, having minimum crossing numbers up to 11, were observed in 3,415 trials. All prime knots with up to seven crossings were observed. The relative probability of forming a knot decreased exponentially with minimum crossing number and M{\"o}bius energy, mathematical measures of knot complexity. Based on the observation that long, stiff strings tend to form a coiled structure when confined, we propose a simple model to describe the knot formation based on random {\textquotedblleft}braid moves{\textquotedblright} of the string end. Our model can qualitatively account for the observed distribution of knots and dependence on agitation time and string length.},
 	issn = {0027-8424},
 	URL = {https://www.pnas.org/content/104/42/16432},
 	eprint = {https://www.pnas.org/content/104/42/16432.full.pdf},
@@ -34,7 +33,7 @@ Please check their original publication for details:
 
 We have submitted a publication for review on our experimental data and the results of our new knotting model.
 Upon publication, I will update this documentation and we ask that you cite our paper if you use this model or code for your own work.
-In the meantime, please feel free contact me at xavier.capaldi at mail.mcgill.ca
+In the meantime, please feel free contact me at capaldix at physics.mcgill.ca
 
 ## Requirements
 
@@ -99,17 +98,17 @@ There are three initial configurations: raymer, peppino and twist.
 #### raymer
 The raymer configuration represents a coil which has no initial crossings.
 
-![Raymer configuration](raymer.png?raw=true "Raymer configuration")
+![Raymer configuration](pictures/raymer.png?raw=true "Raymer configuration")
 
 #### peppino
 The peppino configuration has the terminal end of the coil lying outside the loops which means it crosses all loops before beginning the run.
 
-![Peppino configuration](peppino.png?raw=true "Peppino configuration")
+![Peppino configuration](pictures/peppino.png?raw=true "Peppino configuration")
 
 #### twist
 The twisted configuration is the same as the peppino configuration but the loops have been twised once while the terminal end remains stationary outside of them.
 
-![Twist configuration](twist.png?raw=true "twist configuration")
+![Twist configuration](pictures/twist.png?raw=true "twist configuration")
 
 #### -l LOOPS, --loops LOOPS
 
@@ -123,10 +122,13 @@ In the braid model they are represented as thin vertical lines which lie paralle
 Number of loops (randomly selected) which are inaccessible to the terminal end (it will always pass over them).
 By inaccessible, I mean the terminal end will always cross over them and never loop around them.
 They are graphically represented by dashed lines but in the physical world this represents the terminal end only interacting with some subset of the overall coil because of confinment or rotation of the coil during agitation.
+If this parameter is used in a model (with multiple runs), the inactive loops will only be selected randomly once.
+If you want randomly selected loops for each run, check the section on scripting at the end of this document.
 
 #### -I [SPEC_INACTIVE [SPEC_INACTIVE ...]], --spec_inactive [SPEC_INACTIVE [SPEC_INACTIVE ...]]
 
 Specific loops (from left) which are inaccessible to the terminal end (it will always pass over them).
+Because this takes a list without delimiters as input, it must be the last flag in your command.
 
 Example: -I 1 3 5  ->  the first, third and fifth loop from the left will be inaccessible
 
@@ -227,7 +229,7 @@ Generate a single braid (Raymer) with 3 loops and 5 steps in yellow:
 python tbkm.py raymer -l 3 braid -m 5 -c yellow
 ```
 
-![Example 1](example_1.png?raw=true "Example 1")
+![Example 1](pictures/example_1.png?raw=true "Example 1")
 
 Generate a single braid (Peppino) with 5 loops (2 are inaccessible) and 10 steps in blue:
 
@@ -235,7 +237,7 @@ Generate a single braid (Peppino) with 5 loops (2 are inaccessible) and 10 steps
 python tbkm.py peppino -l 5 -i 2 braid -m 10 -c blue
 ```
 
-![Example 2](example_2.png?raw=true "Example 2")
+![Example 2](pictures/example_2.png?raw=true "Example 2")
 
 Generate a knot (twist) with 5 loops (1st and 3rd loop inaccessible) and 5 steps:
 
@@ -243,7 +245,7 @@ Generate a knot (twist) with 5 loops (1st and 3rd loop inaccessible) and 5 steps
 python tbkm.py twist -l 5 knot -m 5 -I 1 3
 ```
 
-![Example 3](example_3.png?raw=true "Example 3")
+![Example 3](pictures/example_3.png?raw=true "Example 3")
 
 Generate a knot (Peppino) with 3 loops and 5 steps  and analyze the result:
 
@@ -280,6 +282,52 @@ gauss,                           crossingnum, alexander
 ----,                            0,           1
 ----,                            0,           1
 ----,                            0,           1
+```
+
+## Scripting
+
+The last line of tbkm.py calls the command line interface (cli()).
+You can simply comment that line and then import tbkm as a module.
+
+Here is an example to produce 6300 knots with varying parameters and save the results:
+
+```python
+import tbkm
+
+loops = [2,3,4,5,6,7,8,9,10]
+steps = [5,10,15,20,25,30,50]
+
+for coil in loops:
+    for tumble in steps:
+        if coil < 10:
+            coilstr = '0' + str(coil)
+        else:
+            coilstr = str(coil)
+
+        if tumble < 10:
+            tumblestr = '00' + str(tumble)
+        elif tumble < 100:
+            tumblestr = '0' + str(tumble)
+        else:
+            tumblestr = str(tumble)
+        filename="../../sim/raymer_4-max/" + coilstr + "-strands_" + tumblestr + "-moves.csv"
+
+        tbkm.write_header(filename)
+
+        if coil > 4:
+            cut = coil - 4
+        else:
+            cut = False
+
+        for i in range(100):
+            config = tbkm.generate_raymer(coil, non_interacting=cut)
+
+            braid = tbkm.t_steps(tumble, config, color='yellow')
+            knot = tbkm.draw_knot(braid, quiet=True)
+            coords = tbkm.knot_to_coords(knot)
+            analysis = tbkm.analyze_coords(coords, path=filename)
+
+            print(f"{coil} loops - {tumble} steps --> [{i+1}/100]")
 ```
 
 ## License
