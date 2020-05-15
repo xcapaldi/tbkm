@@ -1,5 +1,5 @@
 #  ttbkm
-#  Tumbled Braid Knotting Model
+#  Terminal Braid Knotting Model
 
 #    ┃│ │ │
 #    ┗━┓│ │
