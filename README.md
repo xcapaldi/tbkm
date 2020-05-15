@@ -7,16 +7,16 @@ Knot are drawn completely in the terminal using unicode box-drawing characters a
 
 If you use this project in your own research, please cite us (as well as pyknotid which is the analytical backend):
 
-Xavier Capaldi. tbkm - terminal braid knotting model. https://github.com/xcapaldi/tbkm, 2020. Accessed YYYY-MM-DD.
+**Xavier Capaldi. tbkm - terminal braid knotting model. https://github.com/xcapaldi/tbkm, 2020. Accessed YYYY-MM-DD.**
 
 bibtex format:
 
 ```bibtex
 @Misc{tbkm,
-  author =    {Xavier Capaldi},
-  title =     {tbkm - terminal braid knotting model},
+  author = {Xavier Capaldi},
+  title = {tbkm - terminal braid knotting model},
   howpublished = {\url{https://github.com/xcapaldi/tbkm}},
-  note =      {Accessed YYYY-MM-DD},
+  note = {Accessed YYYY-MM-DD},
   year = 2020,
 }
 ```
@@ -32,18 +32,18 @@ Please check their original publication for details:
 
 ```
 @article {raymer2007spontaneous,
-	author = {Raymer, Dorian M. and Smith, Douglas E.},
-	title = {Spontaneous knotting of an agitated string},
-	volume = {104},
-	number = {42},
-	pages = {16432--16437},
-	year = {2007},
-	doi = {10.1073/pnas.0611320104},
-	publisher = {National Academy of Sciences},
-	issn = {0027-8424},
-	URL = {https://www.pnas.org/content/104/42/16432},
-	eprint = {https://www.pnas.org/content/104/42/16432.full.pdf},
-	journal = {Proceedings of the National Academy of Sciences}
+  author = {Raymer, Dorian M. and Smith, Douglas E.},
+  title = {Spontaneous knotting of an agitated string},
+  volume = {104},
+  number = {42},
+  pages = {16432--16437},
+  year = {2007},
+  doi = {10.1073/pnas.0611320104},
+  publisher = {National Academy of Sciences},
+  issn = {0027-8424},
+  URL = {https://www.pnas.org/content/104/42/16432},
+  eprint = {https://www.pnas.org/content/104/42/16432.full.pdf},
+  journal = {Proceedings of the National Academy of Sciences}
 }
 ```
 
