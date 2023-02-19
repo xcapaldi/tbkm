@@ -298,9 +298,6 @@ gauss,                           crossingnum, alexander
 
 ## Scripting
 
-The last line of tbkm.py calls the command line interface (cli()).
-You can simply comment that line and then import tbkm as a module.
-
 Here is an example to produce 6300 knots with varying parameters and save the results:
 
 ```python

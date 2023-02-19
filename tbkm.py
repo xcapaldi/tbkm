@@ -792,7 +792,7 @@ def run_model(
 
 
 # parse commandline input
-def cli():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="generate (and analyze) knots with a terminal braid knotting model"
     )
@@ -896,16 +896,13 @@ def cli():
 
     # check rate inputs
     if args.right < 0 or args.right > 1:
-        print("the rate of crossing to the right must be between 0 and 1")
-        return
+        raise ValueError("the rate of crossing to the right must be between 0 and 1")
     if args.above < 0 or args.above > 1:
-        print("the rate of crossing above must be between 0 and 1")
-        return
+        raise ValueError("the rate of crossing above must be between 0 and 1")
 
     # check that number of runs has been specified with the model
     if args.select == "model" and not args.runs:
-        print("specify number of runs to perform with the model")
-        return
+        raise ValueError("specify number of runs to perform with the model")
 
     # pick random color if not using model
     if args.select != "model" and args.color == "random":
@@ -931,43 +928,21 @@ def cli():
         init_config = generate_twist(args.loops, non_interacting=inactive)
 
     # braid
-    if args.select == "braid":
-        braid = t_steps(
-            args.moves,
-            init_config,
-            k_right=args.right,
-            k_above=args.above,
-            quiet=args.quiet,
-            color=color,
-            sleep=args.delay,
-            path=args.path,
-        )
-        return
+    braid = t_steps(
+        args.moves,
+        init_config,
+        k_right=args.right,
+        k_above=args.above,
+        quiet=args.quiet,
+        color=color,
+        sleep=args.delay,
+        path=args.path,
+    )
     # knot
-    elif args.select == "knot":
-        braid = t_steps(
-            args.moves,
-            init_config,
-            k_right=args.right,
-            k_above=args.above,
-            quiet=args.quiet,
-            color=color,
-            sleep=args.delay,
-            path=args.path,
-        )
+    if args.select == "knot":
         knot = draw_knot(braid, quiet=args.quiet)
     # analyze
     elif args.select == "analyze":
-        braid = t_steps(
-            args.moves,
-            init_config,
-            k_right=args.right,
-            k_above=args.above,
-            quiet=args.quiet,
-            color=color,
-            sleep=args.delay,
-            path=args.path,
-        )
         knot = draw_knot(braid, quiet=args.quiet)
         coords = knot_to_coords(knot)
         analysis = analyze_coords(coords, path=False, quiet=args.quiet)
@@ -986,9 +961,3 @@ def cli():
             path=args.path,
         )
 
-    return
-
-
-# start the cli interface
-# comment out this line if you just want to import the module for scripting
-cli()
